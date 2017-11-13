@@ -1,0 +1,210 @@
+﻿<div class="container body-content">
+    <div>
+        <h1>Cart Items</h1>
+    </div>
+
+    <script>
+        var mainUrl = '/api/CartItem';
+
+        function getList() {
+            var url = mainUrl;
+
+            $.getJSON(url, function (data) {
+                var text = '<ul>\n';
+
+                for (var i = 0, len = data.length; i < len; i++) {
+                    text += '<li>' + data[i].Id + ' ## ' + data[i].Cart.Id + ' ' + data[i].Cart.UserId + ' ' + data[i].Cart.Datetime
+                         + ' ## ' + data[i].Order.Id + ' ' + data[i].Order.AirTicket.Id + ' ' + data[i].Order.AirTicket.Depart + ' ' + data[i].Order.AirTicket.Arrive
+                         + ' ' + data[i].Order.AirTicket.FromCity.Id + ' ' + data[i].Order.AirTicket.FromCity.Name
+                         + ' ' + data[i].Order.AirTicket.ToCity.Id + ' ' + data[i].Order.AirTicket.ToCity.Name
+                         + ' ' + data[i].Order.AirTicket.Airline.Id + ' ' + data[i].Order.AirTicket.Airline.Name + ' ' + data[i].Order.AirTicket.Price
+                         + ' || ' + data[i].Order.HotelOrder.Id + ' ' + data[i].Order.HotelOrder.CheckIn + ' ' + data[i].Order.HotelOrder.CheckOut
+                         + ' ' + data[i].Order.HotelOrder.Hotel.Id + ' ' + data[i].Order.HotelOrder.Hotel.Name
+                         + ' ' + data[i].Order.HotelOrder.Hotel.City.Id + ' ' + data[i].Order.HotelOrder.Hotel.City.Name
+                         + ' ' + data[i].Order.HotelOrder.Hotel.Address + ' ' + data[i].Order.HotelOrder.Price + '</li>';
+                }
+
+                text += '</ul>';
+
+                $(".listTest").html(text);
+            });
+        }
+
+        function getById() {
+            var url = mainUrl + '/' + $('#getId').val();
+
+            $.getJSON(url, function (data) {
+                var text = '<p> ' + data.Id + ' ## ' + data.Cart.Id + ' ' + data.Cart.UserId + ' ' + data.Cart.Datetime
+                         + ' ## ' + data.Order.Id + ' ' + data.Order.AirTicket.Id + ' ' + data.Order.AirTicket.Depart + ' ' + data.Order.AirTicket.Arrive
+                         + ' ' + data.Order.AirTicket.FromCity.Id + ' ' + data.Order.AirTicket.FromCity.Name
+                         + ' ' + data.Order.AirTicket.ToCity.Id + ' ' + data.Order.AirTicket.ToCity.Name
+                         + ' ' + data.Order.AirTicket.Airline.Id + ' ' + data.Order.AirTicket.Airline.Name + ' ' + data.Order.AirTicket.Price
+                         + ' || ' + data.Order.HotelOrder.Id + ' ' + data.Order.HotelOrder.CheckIn + ' ' + data.Order.HotelOrder.CheckOut
+                         + ' ' + data.Order.HotelOrder.Hotel.Id + ' ' + data.Order.HotelOrder.Hotel.Name
+                         + ' ' + data.Order.HotelOrder.Hotel.City.Id + ' ' + data.Order.HotelOrder.Hotel.City.Name
+                         + ' ' + data.Order.HotelOrder.Hotel.Address + ' ' + data.Order.HotelOrder.Price + '</p>';
+
+                $(".byIdShow").html(text);
+            });
+        }
+
+        function addElem() {
+            var url = mainUrl;
+
+            var jsonData = JSON.stringify({
+                CartId: $('#addCartId').val(),
+                OrderId: $('#addOrderId').val()
+            });
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: jsonData,
+                dataType: "json"
+            }).always(function (result) {
+                getList();
+            });
+        }
+
+        function updateById() {
+            var url = mainUrl + '/' + $('#updateId').val();
+
+            var jsonData = JSON.stringify({
+                CartId: $('#updateCartId').val(),
+                OrderId: $('#updateOrderId').val()
+            });
+
+            $.ajax({
+                url: url,
+                type: 'PUT',
+                data: jsonData,
+                dataType: "json"
+            }).always(function (result) {
+                getList();
+            });
+        }
+
+        function deleteById() {
+            var url = mainUrl + '/' + $('#deleteId').val();
+
+            $.ajax({
+                url: url,
+                type: 'DELETE'
+            }).always(function (result) {
+                getList();
+            });
+        }
+
+        function getCarts() {
+            var url = "/api/Cart";
+
+            var text1 = '<select id ="addCartId" name="carts">';
+            var text2 = '<select id ="updateCartId" name="carts">';
+
+            $.getJSON(url, function (data) {
+                var text = '';
+
+                for (var i = 0, len = data.length; i < len; i++) {
+                    text += '<option value="' + data[i].Id + '">' + data[i].UserId + ' ' + data[i].Datetime + '</option>\n';
+                }
+
+                text += '</select>\n';
+
+                $(".cartsListAdd").html(text1 + text);
+                $(".cartsListUpdate").html(text2 + text);
+            });
+        }
+
+        function getOrders() {
+            var url = "/api/Order";
+
+            var text1 = '<select id ="addOrderId" name="orders">';
+            var text2 = '<select id ="updateOrderId" name="orders">';
+
+            $.getJSON(url, function (data) {
+                var text = '';
+
+                for (var i = 0, len = data.length; i < len; i++) {
+                    text += '<option value="' + data[i].Id + '">' + data[i].AirTicket.Id + ' ' + data[i].AirTicket.Depart + ' ' + data[i].AirTicket.Arrive
+                         + ' ' + data[i].AirTicket.FromCity.Id + ' ' + data[i].AirTicket.FromCity.Name
+                         + ' ' + data[i].AirTicket.ToCity.Id + ' ' + data[i].AirTicket.ToCity.Name
+                         + ' ' + data[i].AirTicket.Airline.Id + ' ' + data[i].AirTicket.Airline.Name + ' ' + data[i].AirTicket.Price
+                         + ' || ' + data[i].HotelOrder.Id + ' ' + data[i].HotelOrder.CheckIn + ' ' + data[i].HotelOrder.CheckOut
+                         + ' ' + data[i].HotelOrder.Hotel.Id + ' ' + data[i].HotelOrder.Hotel.Name
+                         + ' ' + data[i].HotelOrder.Hotel.City.Id + ' ' + data[i].HotelOrder.Hotel.City.Name
+                         + ' ' + data[i].HotelOrder.Hotel.Address + ' ' + data[i].HotelOrder.Price + '</option>\n';
+                }
+
+                text += '</select>\n';
+
+                $(".ordersListAdd").html(text1 + text);
+                $(".ordersListUpdate").html(text2 + text);
+            });
+        }
+
+        $(document).ready(function () { getCarts(); getOrders(); });
+    </script>
+
+    <div>
+        <h2>Cart Items List:</h2>
+        <input id="getList" type="button" value="GetList" onclick="getList();" />
+        <div class="listTest">
+        </div>
+    </div>
+
+    <div>
+        <h2>Get Cart Item by id</h2>
+        <div class="byIdTest">
+            <label for="getId">Id:</label>
+            <br />
+            <input type="text" id="getId">
+            <input id="getBid" type="button" value="Get" onclick="getById();" />
+            <div class="byIdShow">
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h2>Add Cart Item</h2>
+        <div class="addTest">
+            <label>Carts:</label>
+            <br />
+            <div class="cartsListAdd">
+            </div>
+            <label>Orders:</label>
+            <br />
+            <div class="ordersListAdd">
+            </div>
+            <input id="addBid" type="button" value="Add" onclick="addElem();" />
+        </div>
+    </div>
+
+    <div>
+        <h2>Update Cart Item by id</h2>
+        <div class="byIdTest">
+            <label for="updateId">Id:</label>
+            <br />
+            <input type="text" id="updateId">
+            <br />
+            <label>Carts:</label>
+            <br />
+            <div class="cartsListUpdate">
+            </div>
+            <label>Orders:</label>
+            <br />
+            <div class="ordersListUpdate">
+            </div>
+            <input id="updateBid" type="button" value="Update" onclick="updateById();" />
+        </div>
+    </div>
+
+    <div>
+        <h2>Delete Order by id</h2>
+        <div class="byIdTest">
+            <label for="deleteId">Id:</label>
+            <br />
+            <input type="text" id="deleteId">
+            <input id="deleteBid" type="button" value="Delete" onclick="deleteById();" />
+        </div>
+    </div>
+</div>

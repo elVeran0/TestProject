@@ -1,0 +1,117 @@
+﻿<script>
+    var currentCartId = 1;//for test
+
+    var ordersList = [];
+
+    function getList(cartId) {
+        var url = '/api/CartItem/search';
+
+        if (cartId < 1)
+            return false;
+
+        var jsonData = JSON.stringify({CartId : cartId});
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: jsonData,
+            dataType: "json"
+        }).success(function (data) {
+            var text = '';
+            
+            for (var i = 0, len = data.length; i < len; i++) {
+                text += '<tr>\n';
+
+                text += '<td>\n' + data[i].Cart.Datetime + '</td>\n';
+                text += '<td>\n' + data[i].Order.AirTicket.Airline.Name + '</td>\n';
+                text += '<td>\n' + new Date(data[i].Order.AirTicket.Depart) + '</td>\n';
+                text += '<td>\n' + new Date(data[i].Order.AirTicket.Arrive) + '</td>\n';
+                text += '<td>\n' + data[i].Order.AirTicket.FromCity.Name + '</td>\n';
+                text += '<td>\n' + data[i].Order.AirTicket.ToCity.Name + '</td>\n';
+                text += '<td>\n' + data[i].Order.AirTicket.Price + '</td>\n';
+                text += '<td>\n' + data[i].Order.HotelOrder.Hotel.Name + '</td>\n';
+                text += '<td>\n' + data[i].Order.HotelOrder.Hotel.City.Name + '</td>\n';
+                text += '<td>\n' + new Date(data[i].Order.HotelOrder.CheckIn) + '</td>\n';
+                text += '<td>\n' + new Date(data[i].Order.HotelOrder.CheckOut) + '</td>\n';
+                text += '<td>\n' + data[i].Order.HotelOrder.Price + '</td>\n';
+                text += '<td>\n' + (data[i].Order.AirTicket.Price + data[i].Order.HotelOrder.Price) + '</td>\n';
+
+                text += '<td>\n<input class="btn btn-default" type="button" value="Remove" onclick="deleteById(' + data[i].Id +');"/>\n</td>\n';
+                text += '</tr>\n';
+
+                ordersList.push(data[i].Id);
+            }
+
+            $(".tableBody").html(text);
+        });
+    }
+
+    function deleteById(id) {
+        var url = '/api/CartItem/' + id;
+
+        $.ajax({
+            url: url,
+            type: 'DELETE'
+        }).success(function (result) {
+            $(".tableBody").html('');
+            ordersList = [];
+            getList(currentCartId);
+        });
+    }
+
+    function removeAll() {
+        if (ordersList.length == 0)
+            return false;
+
+        for (var i = 0; i < ordersList.length; i++) {
+            var url = '/api/CartItem/' + ordersList[i];
+
+            $.ajax({
+                url: url,
+                type: 'DELETE'
+            });
+        }
+
+        ordersList = [];
+        $(".tableBody").html('');
+    }
+    
+    $(document).ready(function() {
+        getList(currentCartId);
+    });
+</script>
+
+<div style="padding:10px;">
+    <div class="page-header">
+        <h1><a href="/home/index" style="text-decoration:none;">Test Project</a></h1>
+        <br />
+        <h2>Cart</h2>
+    </div>
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Order Date</th>
+                <th>Airline</th>
+                <th>Depart</th>
+                <th>Arrive</th>
+                <th>From City</th>
+                <th>To City</th>
+                <th>Airfare</th>
+                <th>Hotel</th>
+                <th>Hotel City</th>
+                <th>Check-In</th>
+                <th>Check-Out</th>
+                <th>Hotel Price</th>
+                <th>Full Price</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody class="tableBody"></tbody>
+    </table>
+    <div class="panel-body">
+        <div class="col-xs-12 text-center">
+            <input class="btn btn-default btn-lg" id="removeAllId" type="button" value="Remove All" onclick="removeAll();" />
+        </div>
+    </div>
+</div>

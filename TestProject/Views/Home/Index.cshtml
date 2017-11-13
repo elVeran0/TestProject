@@ -1,0 +1,294 @@
+﻿<div class="container body-content">
+    <script>
+        var currentCartId = 1;//for test
+
+        function setAirTicketsList(data) {
+            var text = '<div class="panel panel-default">\n<div class="panel-body">\n<div class="row">\n<div class="col-md-12">\n';
+
+            for (var i = 0, len = data.length; i < len; i++) {
+                text += '<div class="radio">\n<label><input type="radio" name="selectAirTicket" value=' + data[i].Id;
+                if (i == 0)
+                    text += ' checked';
+                text += '>' + 'Depart: ' + new Date(data[i].Depart) + '  |  ' + 'Arrive: ' + new Date(data[i].Arrive) + '  |  ' + 'Airline: ' + data[i].Airline.Name + '  |  ' + 'Price: ' + data[i].Price;
+                text += '</label>\n</div>\n';
+            }
+            text += '</div>\n</div>\n</div>\n</div>';
+
+            $(".airticketsList").html(text);
+        }
+
+        function searchAirTickets() {
+            var url = '/api/AirTicketBase/search';
+
+            var jsonData = JSON.stringify({
+                Depart: $('#dateDepartId').val(),
+                //Arrive: $('#dateArriveId').val(),
+                FromCityId: $('#fromCityId').val(),
+                ToCityId: $('#toCityId').val()
+            });
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: jsonData,
+                dataType: "json"
+            }).success(function (data) {
+                setAirTicketsList(data);
+            });
+        }
+
+        function getCities() {
+            var url = "/api/City";
+
+            var text1 = '<select id ="fromCityId" class = "from-control">';
+            var text2 = '<select id ="toCityId" class = "from-control">';
+            var text3 = '<select id ="hotelCityId" class = "from-control" onchange="updateHotelsList(this);">';
+            text3 += '<option value="' + 0 + '">' + "Choice City" + '</option>\n';
+
+            $.getJSON(url, function (data) {
+                var text = '';
+
+                for (var i = 0, len = data.length; i < len; i++) {
+                    text += '<option value="' + data[i].Id + '">' + data[i].Name + '</option>\n';
+                }
+
+                text += '</select>\n';
+
+                $(".fromCityList").html(text1 + text);
+                $(".toCityList").html(text2 + text);
+                $(".hotelCityList").html(text3 + text);
+            });
+        }
+
+        var hotelsList = {}
+
+        function getHotels() {
+            var url = "/api/Hotel";
+
+            $.getJSON(url, function (data) {
+                for (var i = 0, len = data.length; i < len; i++) {
+                    hotelsList[data[i].Id] = {
+                        Name: data[i].Name,
+                        CityId: data[i].City.Id
+                    }
+                }
+            });
+        }
+
+        function updateHotelsList(select) {
+            var cityId = select.value;
+            if (cityId == 0) {
+                $(".hotelsList").html("");
+                return false;
+            }
+
+            var text = '<select id ="hotelId" class = "from-control">';
+
+            for (var i in hotelsList) {
+                if (hotelsList.hasOwnProperty(i))
+                    if (hotelsList[i].CityId == cityId)
+                        text += '<option value="' + i + '">' + hotelsList[i].Name + '</option>\n';
+            }
+
+            text += '</select>\n';
+
+            $(".hotelsList").html(text);
+        }
+
+        function buyAirticket() {
+            if ($('input[name=selectAirTicket]:checked').val() == 0)
+                return false;
+
+            var url = "/api/AirTicket";
+
+            var jsonData = JSON.stringify({
+                Id: $('input[name=selectAirTicket]:checked').val()
+            });
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: jsonData,
+                dataType: "json"
+            }).success(function (data) {
+                reserveHotel(data);
+            });
+        }
+
+        function reserveHotel(airTicketId) {
+            if (airTicketId == 0)
+                return false;
+
+            if ($('#hotelId').val() == 0)
+                return false;
+
+            var url = "/api/HotelOrder";
+
+            var jsonData = JSON.stringify({
+                CheckIn: $('#checkInId').val(),
+                CheckOut: $('#checkOutId').val(),
+                HotelId: $('#hotelId').val(),
+                Price: Math.floor(Math.random() * (5500 - 2500) + 2500)
+            });
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: jsonData,
+                dataType: "json"
+            }).success(function (data) {
+                reserveOrder(data, airTicketId);
+            });
+        }
+
+        function reserveOrder(hotelOrderId, airTicketId) {
+            var url = "/api/Order";
+
+            var jsonData = JSON.stringify({
+                AirTicketId: airTicketId,
+                HotelOrderId: hotelOrderId
+            });
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: jsonData,
+                dataType: "json"
+            }).success(function (orderId) {
+                var url = "/api/CartItem";
+
+                var jsonData = JSON.stringify({
+                    CartId: currentCartId,
+                    OrderId: orderId
+                });
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: jsonData,
+                    dataType: "json"
+                }).success(function () {
+                    if (wsCartClient != null)
+                    {
+                        wsCartClient.send(currentCartId);
+                    }
+                });
+            });
+        }
+
+        var wsCartClient = null;
+        function connectToWSServer() {
+            var url = 'ws://localhost:49358/OrdersCount';
+            //var url = 'ws://localhost:49358';
+
+            wsCartClient = new WebSocket(url);
+
+            wsCartClient.onopen = function () {
+                wsCartClient.send(currentCartId);
+            };
+            wsCartClient.onclose = function (event) {
+                $(".ordersCount").html("");
+            };
+            //wsCartClient.onerror = function(event) {
+            //    alert('Error :' + event.data());
+            //}
+
+            wsCartClient.onmessage = function (event) {
+                var num = parseInt(event.data, 10);
+                if (num != NaN) {
+                    $(".ordersCount").html(event.data);
+                }
+            };            
+        }
+
+        $(document).ready(function () {
+            getCities();
+            getHotels();
+
+            connectToWSServer();
+            if (wsCartClient != null)
+            {
+                wsCartClient.send(currentCartId);
+            }
+        });
+    </script>
+
+    <div class="page-header">
+        <h1><a href="/home/index" style="text-decoration:none;">Test Project</a></h1>
+        <div class="pull-right">
+            <a href="/home/cart">
+                <div class="glyphicon glyphicon-shopping-cart" style="font-size:32px;">
+                    <span class="ordersCount"></span>
+                </div>
+            </a>
+        </div>
+        <br />
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="panel-title"><label>Air Ticket:</label></div>
+
+            <div class="row" id="airTicketChoiceId">
+                <div class="col-md-4">
+                    <label for="fromCityId">From:</label>
+                    <div class="fromCityList">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label for="toCityId">To:</label>
+                    <div class="toCityList">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="dateDepartId">Depart:</label>
+                    <input class="form-control" id="dateDepartId" name="date" type="date" placeholder="yyyy-mm-dd" />
+                </div>
+                @*<div class="col-md-4">
+                    <label for="dateArriveId">Arrive:</label>
+                    <input class="form-control" id="dateArriveId" name="date" type="date" placeholder="yyyy-mm-dd" />
+                </div>*@
+            </div>
+            <br />
+            <input class="btn btn-default" id="searchAirticketsId" type="button" value="Search" onclick="searchAirTickets();" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="airticketsList">
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="hotelCityId">City:</label>
+                    <div class="hotelCityList">
+                    </div>
+                    <label for="hotelId">Hotel:</label>
+                    <div class="hotelsList">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="checkInId">Check in:</label>
+                    <input class="form-control" id="checkInId" name="checkIn" type="date" placeholder="yyyy-mm-dd hh:mm" />
+                </div>
+                <div class="col-md-4">
+                    <label for="checkOutId">Check Out:</label>
+                    <input class="form-control" id="checkOutId" name="checkOut" type="date" placeholder="yyyy-mm-dd hh:mm" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-body">
+        <div class="col-xs-12 text-center">
+            <input class="btn btn-default btn-lg" id="reserveId" type="button" value="Reserve" onclick="buyAirticket();" />
+        </div>
+    </div>
+</div>

@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS cities, airlines, hotels, air_tickets_base, air_tickets, hotel_orders, orders, cart_items, carts;

@@ -1,0 +1,132 @@
+﻿<div class="container body-content">
+    <div>
+        <h1>Airlines</h1>
+    </div>
+
+    <script>
+        var mainUrl = '/api/Airline';
+
+        function getList() {
+            var url = mainUrl;
+
+            $.getJSON(url, function (data) {
+                var text = '<ul>\n';
+
+                for (var i = 0, len = data.length; i < len; i++) {
+                    text += '<li>' + data[i].Id + ' ' + data[i].Name + '</li>';
+                }
+
+                text += '</ul>';
+
+                $(".listTest").html(text);
+            });
+        }
+
+        function getById() {
+            var url = mainUrl + '/' + $('#getId').val();
+
+            $.getJSON(url, function (data) {
+                var text = '<p> ' + data.Id + ' ' + data.Name + '</p>'
+
+                $(".byIdShow").html(text);
+            });
+        }
+
+        function addElem() {
+            var url = mainUrl;
+
+            var jsonData = JSON.stringify({ Name: $('#addName').val() });
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: jsonData,
+                dataType: "json"
+            }).always(function (result) {
+                getList();
+            });
+        }
+
+        function updateById() {
+            var url = mainUrl + '/' + $('#updateId').val();
+
+            var jsonData = JSON.stringify({ Name: $('#updateIdName').val() })
+
+            $.ajax({
+                url: url,
+                type: 'PUT',
+                data: jsonData,
+                dataType: "json"
+            }).always(function (result) {
+                getList();
+            });
+        }
+
+        function deleteById() {
+            var url = mainUrl + '/' + $('#deleteId').val();
+
+            $.ajax({
+                url: url,
+                type: 'DELETE'
+            }).always(function (result) {
+                getList();
+            });
+        }
+    </script>
+
+    <div>
+        <h2>Airlines List:</h2>
+        <input id="getList" type="button" value="GetList" onclick="getList();" />
+        <div class="listTest">
+        </div>
+    </div>
+
+    <div>
+        <h2>Get Airline by id</h2>
+        <div class="byIdTest">
+            <label for="getBid">Id:</label>
+            <br />
+            <input type="text" id="getId">
+            <input id="getBid" type="button" value="Get" onclick="getById();" />
+            <br />
+            <label for="byIdShow">Info from Id:</label>
+            <br />
+            <div class="byIdShow">
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h2>Add Airline</h2>
+        <div class="addTest">
+            <label for="addName">Airline name:</label>
+            <br />
+            <input type="text" id="addName">
+            <input id="addBid" type="button" value="Add" onclick="addElem();" />
+        </div>
+    </div>
+
+    <div>
+        <h2>Update Airline by id</h2>
+        <div class="byIdTest">
+            <label for="updateId">Id:</label>
+            <br />
+            <input type="text" id="updateId">
+            <br />
+            <label for="updateIdName">Airline name:</label>
+            <br />
+            <input type="text" id="updateIdName">
+            <input id="updateBid" type="button" value="Update" onclick="updateById();" />
+        </div>
+    </div>
+
+    <div>
+        <h2>Delete Airline by id</h2>
+        <div class="byIdTest">
+            <label for="deleteId">Id:</label>
+            <br />
+            <input type="text" id="deleteId">
+            <input id="deleteBid" type="button" value="Delete" onclick="deleteById();" />
+        </div>
+    </div>
+</div>
