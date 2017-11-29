@@ -11,12 +11,12 @@ namespace TestProject.Controllers
 {
     public class AirTicketBaseController : ApiController
     {
-        AirTicketsBaseContext airTicketsBaseContext = new AirTicketsBaseContext();
+        AirTicketsBaseRepository airTicketsBaseRepository = new AirTicketsBaseRepository();
 
         // GET: api/AirTicketBase
         public HttpResponseMessage Get()
         {
-            IEnumerable<AirTicket> result = airTicketsBaseContext.GetAll();
+            IEnumerable<AirTicketBase> result = airTicketsBaseRepository.GetAll();
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -30,7 +30,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            AirTicket result = airTicketsBaseContext.Get(id);
+            AirTicketBase result = airTicketsBaseRepository.Get(id);
 
             if (result == null)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -41,113 +41,57 @@ namespace TestProject.Controllers
         // POST: api/AirTicketBase
         public HttpResponseMessage Post(HttpRequestMessage request)
         {
-            var definition = new
-            {
-                Depart = DateTime.MinValue,
-                Arrive = DateTime.MinValue,
-                FromCityId = 0,
-                ToCityId = 0,
-                AirlineId = 0,
-                Price = 0
-            };
-
-            AirTicket airTicket = new AirTicket();
+            AirTicketBase airTicket;
 
             try
             {
-                var at = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (at == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                airTicket.Depart = at.Depart;
-                airTicket.Arrive = at.Arrive;
-                airTicket.FromCity = new City
-                {
-                    Id = at.FromCityId,
-                    Name = null
-                };
-                airTicket.ToCity = new City
-                {
-                    Id = at.ToCityId,
-                    Name = null
-                };
-                airTicket.Airline = new Airline
-                {
-                    Id = at.AirlineId,
-                    Name = null
-                };
-                airTicket.Price = at.Price;
+                airTicket = JsonConvert.DeserializeObject<AirTicketBase>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (airTicket.Depart < DateTime.MinValue || airTicket.Arrive < DateTime.MinValue ||
-                airTicket.Depart > airTicket.Arrive ||
-                airTicket.FromCity.Id < 1 || airTicket.ToCity.Id < 1 ||
-                airTicket.Airline.Id < 1 || airTicket.Price < 0)
+            if (airTicket == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            int id = airTicketsBaseContext.Add(airTicket);
+            if (airTicket.Depart < DateTime.MinValue || airTicket.Arrive < DateTime.MinValue ||
+                airTicket.Depart > airTicket.Arrive ||
+                airTicket.FromCityId < 1 || airTicket.ToCityId < 1 ||
+                airTicket.AirlineId < 1 || airTicket.Price < 0)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            int id = airTicketsBaseRepository.Add(airTicket);
             if (id == 0)
                 return Request.CreateResponse(HttpStatusCode.InternalServerError);
 
             return Request.CreateResponse(HttpStatusCode.Created, id);
         }
 
-        // POST: api/AirTicketBase
+        // POST:
         [Route("api/AirTicketBase/search")]
         [HttpPost]
         public HttpResponseMessage Search(HttpRequestMessage request)
-        {            
-            var definition = new
-            {
-                Depart = DateTime.MinValue,
-                //Arrive = DateTime.MinValue,
-                FromCityId = 0,
-                ToCityId = 0//,
-                //AirlineId = 0,
-                //Price = 0
-            };
-
-            AirTicket airTicket = new AirTicket();
+        {
+            AirTicketBase airTicket;
 
             try
             {
-                var at = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (at == null)
-                    return Request.CreateResponse(HttpStatusCode.NoContent);
-
-                airTicket.Depart = at.Depart;
-                //airTicket.Arrive = at.Arrive;
-                airTicket.FromCity = new City 
-                { 
-                    Id = at.FromCityId, 
-                    Name = null
-                };
-                airTicket.ToCity = new City
-                { 
-                    Id = at.ToCityId, 
-                    Name = null 
-                };
-                //airTicket.Airline = new Airline { Id = at.AirlineId, Name = null };
-                //airTicket.Price = at.Price;
+                airTicket = JsonConvert.DeserializeObject<AirTicketBase>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (airTicket.Depart < DateTime.Now || //airTicket.Arrive < DateTime.Now ||
-                //airTicket.Depart > airTicket.Arrive ||
-                airTicket.FromCity.Id < 1 || airTicket.ToCity.Id < 1)/* ||
-                airTicket.Airline.Id < 1 || airTicket.Price < 0)*/
-                return Request.CreateResponse(HttpStatusCode.BadRequest);
+            if (airTicket == null)
+                return Request.CreateResponse(HttpStatusCode.NoContent);
 
-            IEnumerable<AirTicket> result = airTicketsBaseContext.Get(airTicket);
+            if (airTicket.Depart < DateTime.Now || 
+                airTicket.FromCityId < 1 || airTicket.ToCityId < 1)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+            
+            IEnumerable<AirTicketBase> result = airTicketsBaseRepository.Get(airTicket);
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -161,59 +105,28 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            var definition = new
-            {
-                Depart = DateTime.MinValue,
-                Arrive = DateTime.MinValue,
-                FromCityId = 0,
-                ToCityId = 0,
-                AirlineId = 0,
-                Price = 0
-            };
-
-            AirTicket airTicket = new AirTicket
-            { 
-                Id = id
-            };
-
+            AirTicketBase airTicket;
             try
             {
-                var at = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (at == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                airTicket.Depart = at.Depart;
-                airTicket.Arrive = at.Arrive;
-                airTicket.FromCity = new City
-                {
-                    Id = at.FromCityId,
-                    Name = null
-                };
-                airTicket.ToCity = new City
-                {
-                    Id = at.ToCityId,
-                    Name = null
-                };
-                airTicket.Airline = new Airline
-                {
-                    Id = at.AirlineId,
-                    Name = null
-                };
-                airTicket.Price = at.Price;
+                airTicket = JsonConvert.DeserializeObject<AirTicketBase>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (airTicket.Depart < DateTime.MinValue || airTicket.Arrive < DateTime.MinValue ||
-                airTicket.Depart > airTicket.Arrive ||
-                airTicket.FromCity.Id < 1 || airTicket.ToCity.Id < 1 ||
-                airTicket.Airline.Id < 1 || airTicket.Price < 0)
+            if (airTicket == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            airTicketsBaseContext.Update(airTicket);
+            airTicket.Id = id;
+
+            if (airTicket.Depart < DateTime.MinValue || airTicket.Arrive < DateTime.MinValue ||
+                airTicket.Depart > airTicket.Arrive ||
+                airTicket.FromCityId < 1 || airTicket.ToCityId < 1 ||
+                airTicket.AirlineId < 1 || airTicket.Price < 0)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            airTicketsBaseRepository.Update(airTicket);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -224,7 +137,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            airTicketsBaseContext.Delete(id);
+            airTicketsBaseRepository.Delete(id);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }

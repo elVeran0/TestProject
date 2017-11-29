@@ -11,12 +11,12 @@ namespace TestProject.Controllers
 {
     public class OrderController : ApiController
     {
-        OrdersContext ordersContext = new OrdersContext();
+        OrdersRepository ordersRepository = new OrdersRepository();
 
         // GET: api/Order
         public HttpResponseMessage Get()
         {
-            IEnumerable<Order> result = ordersContext.GetAll();
+            IEnumerable<Order> result = ordersRepository.GetAll();
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -30,7 +30,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            Order result = ordersContext.Get(id);
+            Order result = ordersRepository.Get(id);
 
             if (result == null)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -41,40 +41,24 @@ namespace TestProject.Controllers
         // POST: api/Order
         public HttpResponseMessage Post(HttpRequestMessage request)
         {
-            var definition = new
-            {
-                AirTicketId = 0,
-                HotelOrderId = 0
-            };
-
-            Order order = new Order();
+            Order order;
 
             try
             {
-                var or = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (or == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                order.AirTicket = new AirTicket
-                {
-                    Id = or.AirTicketId
-                };
-
-                order.HotelOrder = new HotelOrder
-                {
-                    Id = or.HotelOrderId
-                };
+                order = JsonConvert.DeserializeObject<Order>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (order.AirTicket.Id < 1 || order.HotelOrder.Id < 1)
+            if (order == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            int id = ordersContext.Add(order);
+            if (order.AirTicketId < 1 || order.HotelOrderId < 1)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            int id = ordersRepository.Add(order);
             if (id == 0)
                 return Request.CreateResponse(HttpStatusCode.InternalServerError);
 
@@ -87,42 +71,26 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            var definition = new
-            {
-                AirTicketId = 0,
-                HotelOrderId = 0
-            };
-
-            Order order = new Order
-            {
-                Id = id
-            };
+            Order order;
 
             try
             {
-                var or = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (or == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                order.AirTicket = new AirTicket 
-                {
-                    Id = or.AirTicketId
-                };
-                order.HotelOrder = new HotelOrder
-                {
-                    Id = or.HotelOrderId
-                };
+                order = JsonConvert.DeserializeObject<Order>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (order.AirTicket.Id < 1 || order.HotelOrder.Id < 1)
+            if (order == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            ordersContext.Update(order);
+            order.Id = id;
+
+            if (order.AirTicketId < 1 || order.HotelOrderId < 1)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            ordersRepository.Update(order);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -133,7 +101,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            ordersContext.Delete(id);
+            ordersRepository.Delete(id);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }

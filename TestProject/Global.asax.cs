@@ -26,9 +26,6 @@ namespace TestProject
             wsServer.AddWebSocketService<CartWebSocketController>("/OrdersCount");
             wsServer.Start();
             //wsServer.Stop();
-
-            ////Fleck
-            //CartWebSocketController wsController = new CartWebSocketController();
         }
     }
 }

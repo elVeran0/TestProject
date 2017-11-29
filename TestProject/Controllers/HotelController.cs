@@ -11,12 +11,12 @@ namespace TestProject.Controllers
 {
     public class HotelController : ApiController
     {
-        HotelsContext hotelsContext = new HotelsContext();
+        HotelsRepository hotelsRepository = new HotelsRepository();
 
         // GET: api/Hotel
         public HttpResponseMessage Get()
         {
-            IEnumerable<Hotel> result = hotelsContext.GetAll();
+            IEnumerable<Hotel> result = hotelsRepository.GetAll();
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -30,7 +30,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            Hotel result = hotelsContext.Get(id);
+            Hotel result = hotelsRepository.Get(id);
 
             if (result == null)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -41,39 +41,25 @@ namespace TestProject.Controllers
         // POST: api/Hotel
         public HttpResponseMessage Post(HttpRequestMessage request)
         {
-            var definition = new
-            {
-                Name = "",
-                CityId = 0,
-                Address = ""
-            };
-
-            Hotel hotel = new Hotel();
+            Hotel hotel;
 
             try
             {
-                var temp = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-                
-                if (temp == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                hotel.Name = temp.Name;
-                hotel.City = new City
-                {
-                    Id = temp.CityId
-                };
-                hotel.Address = temp.Address;
+                hotel = JsonConvert.DeserializeObject<Hotel>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (hotel.Name == null || hotel.City.Id < 1 || hotel.Address == null)
+            if (hotel == null)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            if (hotel.Name == null || hotel.CityId < 1 || hotel.Address == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
 
-            int id = hotelsContext.Add(hotel);
+            int id = hotelsRepository.Add(hotel);
             if (id == 0)
                 return Request.CreateResponse(HttpStatusCode.InternalServerError);
 
@@ -85,40 +71,27 @@ namespace TestProject.Controllers
         {
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-            var definition = new
-            {
-                Name = "",
-                CityId = 0,
-                Address = ""
-            };
-
-            Hotel hotel = new Hotel
-            {
-                Id = id
-            };
-            hotel.City = new City();
+            
+            Hotel hotel;
 
             try
             {
-                var temp = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (temp == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                hotel.Name = temp.Name;
-                hotel.City.Id = temp.CityId;
-                hotel.Address = temp.Address;
+                hotel = JsonConvert.DeserializeObject<Hotel>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (hotel.Name == null || hotel.City.Id < 1 || hotel.Address == null)
+            if (hotel == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            hotelsContext.Update(hotel);
+            hotel.Id = id;
+
+            if (hotel.Name == null || hotel.CityId < 1 || hotel.Address == null)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            hotelsRepository.Update(hotel);
 
             return Request.CreateResponse(HttpStatusCode.Created);
         }
@@ -129,7 +102,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            hotelsContext.Delete(id);
+            hotelsRepository.Delete(id);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }

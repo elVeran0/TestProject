@@ -22,7 +22,6 @@
 
             var jsonData = JSON.stringify({
                 Depart: $('#dateDepartId').val(),
-                //Arrive: $('#dateArriveId').val(),
                 FromCityId: $('#fromCityId').val(),
                 ToCityId: $('#toCityId').val()
             });
@@ -33,7 +32,13 @@
                 data: jsonData,
                 dataType: "json"
             }).success(function (data) {
-                setAirTicketsList(data);
+                if (data == undefined)
+                    $(".airticketsList").html("");
+                else
+                {
+                    setAirTicketsList(data);
+                    $("#hotelCityId").val($('#toCityId').val()).change();
+                }
             });
         }
 
@@ -95,7 +100,8 @@
             $(".hotelsList").html(text);
         }
 
-        function buyAirticket() {
+        function startReserve() {
+            //first - reserve AirTicket
             if ($('input[name=selectAirTicket]:checked').val() == 0)
                 return false;
 
@@ -179,7 +185,6 @@
         var wsCartClient = null;
         function connectToWSServer() {
             var url = 'ws://localhost:49358/OrdersCount';
-            //var url = 'ws://localhost:49358';
 
             wsCartClient = new WebSocket(url);
 
@@ -189,9 +194,6 @@
             wsCartClient.onclose = function (event) {
                 $(".ordersCount").html("");
             };
-            //wsCartClient.onerror = function(event) {
-            //    alert('Error :' + event.data());
-            //}
 
             wsCartClient.onmessage = function (event) {
                 var num = parseInt(event.data, 10);
@@ -246,10 +248,6 @@
                     <label for="dateDepartId">Depart:</label>
                     <input class="form-control" id="dateDepartId" name="date" type="date" placeholder="yyyy-mm-dd" />
                 </div>
-                @*<div class="col-md-4">
-                    <label for="dateArriveId">Arrive:</label>
-                    <input class="form-control" id="dateArriveId" name="date" type="date" placeholder="yyyy-mm-dd" />
-                </div>*@
             </div>
             <br />
             <input class="btn btn-default" id="searchAirticketsId" type="button" value="Search" onclick="searchAirTickets();" />
@@ -288,7 +286,7 @@
 
     <div class="panel-body">
         <div class="col-xs-12 text-center">
-            <input class="btn btn-default btn-lg" id="reserveId" type="button" value="Reserve" onclick="buyAirticket();" />
+            <input class="btn btn-default btn-lg" id="reserveId" type="button" value="Reserve" onclick="startReserve();" />
         </div>
     </div>
 </div>

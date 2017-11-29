@@ -11,12 +11,12 @@ namespace TestProject.Controllers
 {
     public class HotelOrderController : ApiController
     {
-        HotelOrdersContext hotelOrdersContext = new HotelOrdersContext();
+        HotelOrdersRepository hotelOrdersRepository = new HotelOrdersRepository();
 
         // GET: api/HotelOrder
         public HttpResponseMessage Get()
         {
-            IEnumerable<HotelOrder> result = hotelOrdersContext.GetAll();
+            IEnumerable<HotelOrder> result = hotelOrdersRepository.GetAll();
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -30,7 +30,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            HotelOrder result = hotelOrdersContext.Get(id);
+            HotelOrder result = hotelOrdersRepository.Get(id);
 
             if (result == null)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -41,86 +41,58 @@ namespace TestProject.Controllers
         // POST: api/HotelOrder
         public HttpResponseMessage Post(HttpRequestMessage request)
         {
-            var definition = new
-            {
-                CheckIn = DateTime.MinValue,
-                CheckOut = DateTime.MinValue,
-                HotelId = 0,
-                Price = 0
-            };
-
-            HotelOrder hotelOrder = new HotelOrder();
+            HotelOrder hotelOrder;
 
             try
             {
-                var ho = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (ho == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                hotelOrder.CheckIn = ho.CheckIn;
-                hotelOrder.CheckOut = ho.CheckOut;
-                hotelOrder.Hotel = new Hotel();
-                hotelOrder.Hotel.Id = ho.HotelId;
-                hotelOrder.Price = ho.Price;
+                hotelOrder = JsonConvert.DeserializeObject<HotelOrder>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
+            if (hotelOrder == null)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
             if (hotelOrder.CheckIn < DateTime.MinValue || hotelOrder.CheckOut < DateTime.MinValue ||
                 hotelOrder.CheckIn > hotelOrder.CheckOut ||
-                hotelOrder.Hotel.Id < 1 || hotelOrder.Price < 0)
+                hotelOrder.HotelId < 1 || hotelOrder.Price < 0)
 
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            int id = hotelOrdersContext.Add(hotelOrder);
+            int id = hotelOrdersRepository.Add(hotelOrder);
             if (id == 0)
                 return Request.CreateResponse(HttpStatusCode.InternalServerError);
 
             return Request.CreateResponse(HttpStatusCode.Created, id);
         }
 
-        // POST: api/HotelOrder
+        // POST:
         [Route("api/HotelOrder/search")]
         [HttpPost]
         public HttpResponseMessage Search(HttpRequestMessage request)
         {
-            var definition = new
-            {
-                CheckIn = DateTime.MinValue,
-                CheckOut = DateTime.MinValue,
-                HotelId = 0//,
-                //Price = 0
-            };
-
-            HotelOrder hotelOrder = new HotelOrder();
+            HotelOrder hotelOrder;
 
             try
             {
-                var ho = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (ho == null)
-                    return Request.CreateResponse(HttpStatusCode.NoContent);
-
-                hotelOrder.CheckIn = ho.CheckIn;
-                hotelOrder.CheckOut = ho.CheckOut;
-                hotelOrder.Hotel = new Hotel();
-                hotelOrder.Hotel.Id = ho.HotelId;
-                //hotelOrder.Price = ho.Price;
+                hotelOrder = JsonConvert.DeserializeObject<HotelOrder>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
+            if (hotelOrder == null)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
             if (hotelOrder.CheckIn < DateTime.MinValue || hotelOrder.CheckOut < DateTime.MinValue ||
                 hotelOrder.CheckIn > hotelOrder.CheckOut ||
-                hotelOrder.Hotel.Id < 1 || hotelOrder.Price < 0)
+                hotelOrder.HotelId < 1 || hotelOrder.Price < 0)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             
-            IEnumerable<HotelOrder> result = hotelOrdersContext.Get(hotelOrder);
+            IEnumerable<HotelOrder> result = hotelOrdersRepository.Get(hotelOrder);
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -134,43 +106,28 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            var definition = new
-            {
-                CheckIn = DateTime.MinValue,
-                CheckOut = DateTime.MinValue,
-                HotelId = 0,
-                Price = 0
-            };
-
-            HotelOrder hotelOrder = new HotelOrder
-            {
-                Id = id
-            };
+            HotelOrder hotelOrder;
 
             try
             {
-                var ho = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (ho == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                hotelOrder.CheckIn = ho.CheckIn;
-                hotelOrder.CheckOut = ho.CheckOut;
-                hotelOrder.Hotel = new Hotel();
-                hotelOrder.Hotel.Id = ho.HotelId;
-                hotelOrder.Price = ho.Price;
+                hotelOrder = JsonConvert.DeserializeObject<HotelOrder>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
+            if (hotelOrder == null)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            hotelOrder.Id = id;
+
             if (hotelOrder.CheckIn < DateTime.MinValue || hotelOrder.CheckOut < DateTime.MinValue ||
-                hotelOrder.Hotel.Id < 1 || hotelOrder.Price < 0)
+                hotelOrder.HotelId < 1 || hotelOrder.Price < 0)
              
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            hotelOrdersContext.Update(hotelOrder);
+            hotelOrdersRepository.Update(hotelOrder);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -181,7 +138,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            hotelOrdersContext.Delete(id);
+            hotelOrdersRepository.Delete(id);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }

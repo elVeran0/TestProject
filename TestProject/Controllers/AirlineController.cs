@@ -11,12 +11,12 @@ namespace TestProject.Controllers
 {
     public class AirlineController : ApiController
     {
-        AirlinesContext airlinesContext = new AirlinesContext();
+        AirlinesRepository airlinesRepository = new AirlinesRepository();
 
         // GET: api/Airline
         public HttpResponseMessage Get()
         {
-            IEnumerable<Airline> result = airlinesContext.GetAll();
+            IEnumerable<Airline> result = airlinesRepository.GetAll();
 
             if(result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -30,7 +30,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            Airline result = airlinesContext.Get(id);
+            Airline result = airlinesRepository.Get(id);
 
             if (result == null)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -41,26 +41,22 @@ namespace TestProject.Controllers
         // POST: api/Airline
         public HttpResponseMessage Post(HttpRequestMessage request)
         {
-            var definition = new 
-            { 
-                Name = "" 
-            };
-
-            String name;
+            Airline airline;
 
             try
             {
-                name = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition).Name;
+                airline = JsonConvert.DeserializeObject<Airline>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
-
-            if (name == null)
+            
+            if (airline == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            int id = airlinesContext.Add(name);
+            int id = airlinesRepository.Add(airline);
+
             if (id == 0)
                 return Request.CreateResponse(HttpStatusCode.InternalServerError);
 
@@ -73,29 +69,23 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            var definition = new 
-            { 
-                Name = "" 
-            };
-            String name;
+            Airline airline;
 
             try
             {
-                name = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition).Name;
+                airline = JsonConvert.DeserializeObject<Airline>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (name == null)
+            if (airline == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
+            
+            airline.Id = id;            
 
-            airlinesContext.Update(new Airline
-            {
-                Id = id,
-                Name = name
-            });
+            airlinesRepository.Update(airline);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -106,7 +96,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            airlinesContext.Delete(id);
+            airlinesRepository.Delete(id);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }

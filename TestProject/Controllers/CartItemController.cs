@@ -11,12 +11,12 @@ namespace TestProject.Controllers
 {
     public class CartItemController : ApiController
     {
-        CartItemsContext cartsItemContext = new CartItemsContext();
+        CartItemsRepository cartsItemRepository = new CartItemsRepository();
 
         // GET: api/CartItem
         public HttpResponseMessage Get()
         {
-            IEnumerable<CartItem> result = cartsItemContext.GetAll();
+            IEnumerable<CartItem> result = cartsItemRepository.GetAll();
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -30,7 +30,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            CartItem result = cartsItemContext.Get(id);
+            CartItem result = cartsItemRepository.Get(id);
 
             if (result == null)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -41,78 +41,53 @@ namespace TestProject.Controllers
         // POST: api/CartItem
         public HttpResponseMessage Post(HttpRequestMessage request)
         {
-            var definition = new
-            {
-                CartId = 0,
-                OrderId = 0
-            };
-
-            CartItem cartItem = new CartItem();
+            CartItem cartItem;
 
             try
             {
-                var ci = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (ci == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                cartItem.Cart = new Cart
-                {
-                    Id = ci.CartId
-                };
-                cartItem.Order = new Order
-                {
-                    Id = ci.OrderId
-                };
+                cartItem  = JsonConvert.DeserializeObject<CartItem>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (cartItem.Cart.Id < 1 || cartItem.Order.Id < 1)
+            if (cartItem == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            int id = cartsItemContext.Add(cartItem);
+            if (cartItem.CartId < 1 || cartItem.OrderId < 1)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            int id = cartsItemRepository.Add(cartItem);
             if (id == 0)
                 return Request.CreateResponse(HttpStatusCode.InternalServerError);
 
             return Request.CreateResponse(HttpStatusCode.Created, id);
         }
 
-        // POST: api/CartItem
+        // POST:
         [Route("api/CartItem/search")]
         [HttpPost]
         public HttpResponseMessage Search(HttpRequestMessage request)
         {
-            var definition = new
-            {
-                CartId = 0
-            };
-
-            CartItem cartItem = new CartItem();
+            CartItem cartItem;
 
             try
             {
-                var ct = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (ct == null)
-                    return Request.CreateResponse(HttpStatusCode.NoContent);
-
-                cartItem.Cart = new Cart 
-                { 
-                    Id = ct.CartId
-                };                    
+                cartItem = JsonConvert.DeserializeObject<CartItem>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (cartItem.Cart.Id < 1)
+            if (cartItem == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            IEnumerable<CartItem> result = cartsItemContext.Get(cartItem);
+            if (cartItem.CartId < 1)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            IEnumerable<CartItem> result = cartsItemRepository.Get(cartItem);
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -126,42 +101,26 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            var definition = new
-            {
-                CartId = 0,
-                OrderId = 0
-            };
-
-            CartItem cartItem = new CartItem
-            {
-                Id = id
-            };
+            CartItem cartItem;
 
             try
             {
-                var ci = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (ci == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                cartItem.Cart = new Cart
-                {
-                    Id = ci.CartId
-                };
-                cartItem.Order = new Order
-                {
-                    Id = ci.OrderId
-                };
+                cartItem = JsonConvert.DeserializeObject<CartItem>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (cartItem.Cart.Id < 1 || cartItem.Order.Id < 1)
+            if (cartItem == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            cartsItemContext.Update(cartItem);
+            cartItem.Id = id;
+
+            if (cartItem.CartId < 1 || cartItem.OrderId < 1)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            cartsItemRepository.Update(cartItem);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -172,7 +131,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            cartsItemContext.Delete(id);
+            cartsItemRepository.Delete(id);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }

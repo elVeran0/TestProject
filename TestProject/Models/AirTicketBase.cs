@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TestProject.Models
 {
-    [Table("air_tickets")]
-    public class AirTicket
+    [Table("air_tickets_base")]
+    public class AirTicketBase
     {
         [Column("id")]
         public int Id { get; set; }
@@ -21,7 +21,7 @@ namespace TestProject.Models
 
         [Column("to_city_id")]
         public int ToCityId { get; set; }
-
+        
         [Column("airlines_id")]
         public int AirlineId { get; set; }
 
@@ -33,22 +33,22 @@ namespace TestProject.Models
         public virtual Airline Airline { get; set; }
 
 
-        public static implicit operator AirTicketBase(AirTicket at)
+        public static implicit operator AirTicket(AirTicketBase atBase)
         {
-            AirTicketBase atBase = new AirTicketBase
+            AirTicket at = new AirTicket
             {
-                Depart = at.Depart,
-                Arrive = at.Arrive,
-                FromCityId = at.FromCityId,
-                ToCityId = at.ToCityId,
-                AirlineId = at.AirlineId,
-                Price = at.Price,
-                FromCity = at.FromCity,
-                ToCity = at.ToCity,
-                Airline = at.Airline
+                Depart = atBase.Depart,
+                Arrive = atBase.Arrive,
+                FromCityId = atBase.FromCityId,
+                ToCityId = atBase.ToCityId,
+                AirlineId = atBase.AirlineId,
+                Price = atBase.Price,
+                FromCity = atBase.FromCity,
+                ToCity = atBase.ToCity,
+                Airline = atBase.Airline
             };
 
-            return atBase;
+            return at;
         }
     }
 }

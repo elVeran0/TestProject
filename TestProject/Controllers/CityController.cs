@@ -11,12 +11,12 @@ namespace TestProject.Controllers
 {
     public class CityController : ApiController
     {
-        CitiesContext citiesContext = new CitiesContext();
+        CitiesRepository citiesRepository = new CitiesRepository();
 
         // GET: api/City
         public HttpResponseMessage Get()
         {
-            IEnumerable<City> result = citiesContext.GetAll();
+            IEnumerable<City> result = citiesRepository.GetAll();
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -30,7 +30,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            City result = citiesContext.Get(id);
+            City result = citiesRepository.Get(id);
 
             if (result == null)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -41,26 +41,22 @@ namespace TestProject.Controllers
         // POST: api/City        
         public HttpResponseMessage Post(HttpRequestMessage request)
         {
-            var definition = new
-            { 
-                Name = "" 
-            };
-
-            String name;
+            City city;
 
             try
             {
-                name = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition).Name;
+                city = JsonConvert.DeserializeObject<City>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (name == null)
+            if (city == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            int id = citiesContext.Add(name);
+            int id = citiesRepository.Add(city);
+
             if (id == 0)
                 return Request.CreateResponse(HttpStatusCode.InternalServerError);
 
@@ -73,30 +69,23 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            var definition = new
-            { 
-                Name = "" 
-            };
-
-            String name;
+            City city;
 
             try
             {
-                name = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition).Name;
+                city = JsonConvert.DeserializeObject<City>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            if (name == null)
+            if (city == null)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            citiesContext.Update(new City 
-            { 
-                Id = id,
-                Name = name
-            });
+            city.Id = id;
+
+            citiesRepository.Update(city);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -107,7 +96,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            citiesContext.Delete(id);
+            citiesRepository.Delete(id);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }

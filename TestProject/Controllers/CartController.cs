@@ -11,12 +11,12 @@ namespace TestProject.Controllers
 {
     public class CartController : ApiController
     {
-        CartsContext cartsContext = new CartsContext();
+        CartsRepository cartsRepository = new CartsRepository();
 
         // GET: api/Cart
         public HttpResponseMessage Get()
         {
-            IEnumerable<Cart> result = cartsContext.GetAll();
+            IEnumerable<Cart> result = cartsRepository.GetAll();
 
             if (result.Any() == false)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -30,7 +30,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            Cart result = cartsContext.Get(id);
+            Cart result = cartsRepository.Get(id);
 
             if (result == null)
                 return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -41,33 +41,24 @@ namespace TestProject.Controllers
         // POST: api/Cart
         public HttpResponseMessage Post(HttpRequestMessage request)
         {
-            var definition = new
-            {
-                userId = 0,
-                datetime = DateTime.MinValue
-            };
-
-            Cart cart = new Cart();
+            Cart cart;
 
             try
             {
-                var temp = JsonConvert.DeserializeAnonymousType(request.Content.ReadAsStringAsync().Result, definition);
-
-                if (temp == null)
-                    return Request.CreateResponse(HttpStatusCode.BadRequest);
-
-                cart.UserId = temp.userId;
-                cart.Datetime = temp.datetime;
+                cart = JsonConvert.DeserializeObject<Cart>(request.Content.ReadAsStringAsync().Result);
             }
             catch (Exception)
             {
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
+            if (cart == null)
+                return Request.CreateResponse(HttpStatusCode.BadRequest);
+
             if (cart.UserId < 1 || cart.Datetime < DateTime.MinValue)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            int id = cartsContext.Add(cart);
+            int id = cartsRepository.Add(cart);
             if (id == 0)
                 return Request.CreateResponse(HttpStatusCode.InternalServerError);
 
@@ -96,7 +87,7 @@ namespace TestProject.Controllers
 
             cart.Id = id;
 
-            cartsContext.Update(cart);
+            cartsRepository.Update(cart);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -107,7 +98,7 @@ namespace TestProject.Controllers
             if (id < 1)
                 return Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            cartsContext.Delete(id);
+            cartsRepository.Delete(id);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
